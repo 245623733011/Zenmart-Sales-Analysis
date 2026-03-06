@@ -1,0 +1,42 @@
+:root{
+  --bg1: #eef2ff;
+  --bg2: #dbeafe;
+  --accent: #2563eb;
+  --card: #ffffff;
+  --muted: #6b7280;
+}
+*{box-sizing:border-box}
+body{
+  font-family: Inter, Arial, sans-serif;
+  margin:0;
+  min-height:100vh;
+  background: linear-gradient(135deg,var(--bg1),var(--bg2));
+  color:#0f172a;
+}
+.page{display:flex;flex-direction:column;min-height:100vh}
+.header{
+  display:flex;justify-content:space-between;align-items:center;padding:18px 28px;background:transparent;
+}
+.header h1{margin:0;color:var(--accent)}
+.header-right button{margin-left:8px;padding:8px 12px;border-radius:8px;border:none;background:#111827;color:#fff}
+.container{display:flex;gap:18px;padding:18px 28px;flex:1}
+.sidebar{width:220px}
+.card{background:var(--card);padding:20px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.08)}
+.centered{max-width:420px;margin:60px auto;text-align:center}
+input[type="text"], input[type="password"], input[type="search"]{
+  width:100%;padding:10px;border-radius:8px;border:1px solid #e6edf6;margin:8px 0;
+}
+button{cursor:pointer}
+.products-grid{display:flex;flex-wrap:wrap;gap:14px}
+.product-card{width:220px;background:var(--card);padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+.prod-name{font-weight:600;margin-bottom:6px}
+.prod-cat{color:var(--muted);font-size:13px;margin-bottom:4px}
+.prod-price{font-weight:700;color:#111827;margin-bottom:8px}
+.prod-actions .add-btn{padding:8px 10px;border-radius:8px;border:none;background:var(--accent);color:white}
+.cart-panel{width:320px;background:var(--card);padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+.cart-item{padding:8px;border-bottom:1px solid #f1f5f9}
+.cart-footer{margin-top:12px;display:flex;justify-content:space-between;align-items:center}
+.primary{background:#059669;color:white;border:none;padding:10px 12px;border-radius:8px}
+.hidden{display:none}
+.cat-btn{display:block;width:100%;text-align:left;padding:8px;border-radius:8px;border:none;background:transparent;margin-bottom:8px}
+.footer{padding:14px 28px;text-align:center;color:var(--muted)}

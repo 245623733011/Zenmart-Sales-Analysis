@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ZenMart Store</title>
+  <link rel="stylesheet" href="/static/styles.css">
+
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg,#eef2ff,#dbeafe,#bfdbfe);
+      margin:0;
+      padding:20px;
+    }
+    .login-container{
+      width:350px;
+      margin:120px auto;
+      padding:30px;
+      background:white;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15);
+      text-align:center;
+    }
+    input{
+      width:90%;
+      padding:10px;
+      margin:10px 0;
+      border-radius:8px;
+      border:1px solid #aaa;
+    }
+    button{
+      padding:10px 20px;
+      border:none;
+      background:#2563eb;
+      color:white;
+      border-radius:8px;
+      cursor:pointer;
+    }
+    #mainPage{
+      display:none;
+    }
+    .category-box{
+      background:white;
+      padding:15px;
+      border-radius:12px;
+      margin-bottom:20px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.1);
+    }
+    .product-card{
+      border:1px solid #ddd;
+      padding:10px;
+      width:200px;
+      border-radius:8px;
+      background:white;
+      box-shadow:0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .dashboard-btn{
+      background:#10b981;
+      padding:12px 18px;
+      color:white;
+      border-radius:10px;
+      border:none;
+      cursor:pointer;
+      margin-top:25px;
+      font-size:16px;
+      font-weight:bold;
+      display:none; /* hide by default */
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-container">
+  <h2>ZenMart Login</h2>
+  <input type="text" id="username" placeholder="Enter Username">
+  <input type="password" id="password" placeholder="Enter Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- MAIN SHOP PAGE -->
+<div id="mainPage">
+  <h1>ZenMart Store</h1>
+
+  <h2>Shop by Category</h2>
+  <div id="categories"></div>
+
+  <h3>Your Cart</h3>
+  <div id="cart"></div>
+  <button id="checkoutBtn">Checkout</button>
+
+  <!-- 🌟 BUTTON TO OPEN ADMIN DASHBOARD -->
+  <button id="dashboardBtn" class="dashboard-btn" onclick="openDashboard()">
+      📊 Open Analytics Dashboard
+  </button>
+
+</div>
+
+<script>
+const products = {{ products|tojson }};
+let isAdmin = false;
+
+function login(){
+  const u = document.getElementById("username").value;
+  const p = document.getElementById("password").value;
+
+  if(u === "Chandana" && p === "Chandana"){
+      // Login as admin → get access to dashboard
+      fetch("/admin_login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username: u, password: p})
+      }).then(res=>res.json()).then(data=>{
+          if(data.status === "ok"){
+              isAdmin = true;
+              document.getElementById("dashboardBtn").style.display = "inline-block"; // show button
+          }
+      });
+
+      document.getElementById("loginPage").style.display="none";
+      document.getElementById("mainPage").style.display="block";
+  }
+  else if(u && p){
+      // Normal customer
+      document.getElementById("loginPage").style.display="none";
+      document.getElementById("mainPage").style.display="block";
+  }
+  else {
+      alert("Enter valid login details");
+  }
+}
+
+function openDashboard(){
+  if(isAdmin){
+    window.open("/dashboard", "_blank");
+  } else {
+    alert("Unauthorized access");
+  }
+}
+
+function renderProductsByCategory(){
+  const container = document.getElementById("categories");
+  container.innerHTML = "";
+
+  const groups = {};
+  products.forEach(p=>{
+    if(!groups[p.category]) groups[p.category] = [];
+    groups[p.category].push(p);
+  });
+
+  for(const cat in groups){
+    const section = document.createElement("div");
+    section.className = "category-box";
+    section.innerHTML = `<h3>${cat}</h3>`;
+
+    const wrapper = document.createElement("div");
+    wrapper.style.display="flex";
+    wrapper.style.flexWrap="wrap";
+    wrapper.style.gap="10px";
+
+    groups[cat].forEach(p=>{
+      const card = document.createElement("div");
+      card.className = "product-card";
+      card.innerHTML = `<strong>${p.name}</strong><br/>Price: ₹${p.price}<br/>
+      <button onclick="addToCart('${p.product_id}')">Add to cart</button>`;
+      wrapper.appendChild(card);
+    });
+
+    section.appendChild(wrapper);
+    container.appendChild(section);
+  }
+}
+
+async function addToCart(pid){
+  await fetch("/add_to_cart", {
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({product_id: pid, quantity:1})
+  });
+  renderCart();
+}
+
+async function removeFromCart(pid){
+  await fetch("/remove_from_cart", {
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({product_id: pid})
+  });
+  renderCart();
+}
+
+async function renderCart(){
+  const res = await fetch("/cart");
+  const data = await res.json();
+  const container = document.getElementById("cart");
+
+  if(!data.items.length){ 
+      container.innerHTML = "<i>Cart is empty</i>"; 
+      return; 
+  }
+
+  container.innerHTML="";
+
+  data.items.forEach(it=>{
+    const div = document.createElement("div");
+    div.innerHTML = `${it.name} - Qty: ${it.quantity} - ₹${it.total}
+    <button onclick="removeFromCart('${it.product_id}')">Remove</button>`;
+    container.appendChild(div);
+  });
+}
+
+document.getElementById("checkoutBtn").addEventListener("click", async ()=>{
+  const res = await fetch("/checkout", {method:"POST"});
+  const j = await res.json();
+  if(j.status==="ok"){ 
+    alert("Checkout success! Invoice: "+j.invoice); 
+    renderCart(); 
+  }
+});
+
+renderProductsByCategory();
+</script>
+
+</body>
+</html>
